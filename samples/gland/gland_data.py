@@ -26,6 +26,7 @@ import json
 import datetime
 import numpy as np
 import skimage.draw
+from imgaug import augmenters as iaa
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../../")
@@ -67,6 +68,18 @@ class GlandConfig(Config):
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
 
+    BACKBONE = "alexnet"
+    # BACKBONE = "resnet50"
+    # FPN_CLASSIF_FC_LAYERS_SIZE = 1024
+
+
+    BACKBONE_STRIDES = [4, 8/3, 8/3, 4, 32/3]
+    # Size of the top-down layers used to build the feature pyramid
+    # TOP_DOWN_PYRAMID_SIZE = 256
+    #
+    # Length of square anchor side in pixels
+    RPN_ANCHOR_SCALES = (96, 256, 384, 384, 256)
+
 
 ############################################################
 #  Dataset
@@ -83,7 +96,7 @@ class GlandDataset(utils.Dataset):
         self.add_class("gland", 1, "gland")
 
         # Train or validation dataset?
-        assert subset in ["train", "val"]
+        assert subset in ["train", "val", "val2"]
         dataset_dir = os.path.join(dataset_dir, subset)
 
         # Load annotations
@@ -183,6 +196,16 @@ def train(model):
     dataset_val = GlandDataset()
     dataset_val.load_gland(args.dataset, "val")
     dataset_val.prepare()
+
+    augmentation = iaa.SomeOf((0, 2), [
+        iaa.Fliplr(0.5),
+        iaa.Flipud(0.5),
+        iaa.OneOf([iaa.Affine(rotate=90),
+                   iaa.Affine(rotate=180),
+                   iaa.Affine(rotate=270)]),
+        iaa.Multiply((0.8, 1.5)),
+        iaa.GaussianBlur(sigma=(0.0, 5.0))
+    ])
     #
     # *** This training schedule is an example. Update to your needs ***
     # Since we're using a very small dataset, and starting from
@@ -192,6 +215,7 @@ def train(model):
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=30,
+                augmentation=augmentation,
                 layers='heads')
 
 
@@ -331,7 +355,10 @@ if __name__ == '__main__':
 
     # Select weights file to load
     if args.weights.lower() == "coco":
-        weights_path = COCO_WEIGHTS_PATH
+        if config.BACKBONE == "alexnet":
+            weights_path = os.path.join(ROOT_DIR, "AlexNet-model.h5")
+        else:
+            weights_path = COCO_WEIGHTS_PATH
         # Download weights file
         if not os.path.exists(weights_path):
             utils.download_trained_weights(weights_path)
