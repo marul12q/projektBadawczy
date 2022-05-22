@@ -216,42 +216,6 @@ def resnet_graph(input_image, architecture, stage5=False, train_bn=True):
 
 
 # OLD
-# def alexnet_graph(input_image, architecture, stage5=False, train_bn=True):
-#     """Build a Alexnet graph.
-#         architecture: Can be alexnet
-#         stage5: Boolean. If False, stage5 of the network is not created
-#         train_bn: Boolean. Train or freeze Batch Norm layers
-#     """
-#     assert architecture in ["alexnet"]
-#
-#     x = input_image
-#     x = KL.Conv2D(96, (11, 11), strides=(4, 4), name='conv1', use_bias=True)(x)
-#     x = KL.Activation('relu')(x)
-#     x = tf.nn.lrn(x, depth_radius=N_DEPTH_RADIUS, bias=K_BIAS, alpha=ALPHA, beta=BETA)
-#     C1 = x = KL.MaxPooling2D((3, 3), strides=(2, 2), padding="valid")(x)
-#     # Stage 2
-#     x = KL.Conv2D(256, (5, 5), strides=(1, 1), name='conv2', use_bias=True, padding="same")(x)
-#     x = KL.Activation('relu')(x)
-#     x = tf.nn.lrn(x, depth_radius=5, bias=K_BIAS, alpha=ALPHA, beta=BETA)
-#     C2 = x = KL.MaxPooling2D((3, 3), strides=(1, 1), padding="valid")(x)
-#     # Stage 3
-#     x = KL.Conv2D(384, (3, 3), strides=(1, 1), padding="same", name="conv3")(x)
-#     C3 = x = KL.Activation('relu')(x)
-#     # Stage 4
-#     x = KL.Conv2D(384, (3, 3), strides=(1, 1), padding="same", name="conv4")(x)
-#     C4 = x = KL.Activation('relu')(x)
-#
-#     # Stage 5
-#     if stage5:
-#         x = KL.Conv2D(256, (3, 3), strides=(1, 1), padding="same", name="conv5")(x)
-#         x = KL.Activation('relu')(x)
-#         C5 = x = KL.MaxPooling2D((3, 3), strides=(1, 1), padding="valid")(x)
-#     else:
-#         C5 = None
-#
-#     return [C1, C2, C3, C4, C5]
-
-# NEW
 def alexnet_graph(input_image, architecture, stage5=False, train_bn=True):
     """Build a Alexnet graph.
         architecture: Can be alexnet
@@ -261,38 +225,76 @@ def alexnet_graph(input_image, architecture, stage5=False, train_bn=True):
     assert architecture in ["alexnet"]
 
     x = input_image
+    # x = KL.ZeroPadding2D((3, 3))(input_image)
     x = KL.Conv2D(96, (11, 11), strides=(4, 4), name='conv1', use_bias=True)(x)
     x = KL.Activation('relu')(x)
-    # x = tf.nn.lrn(x, depth_radius=N_DEPTH_RADIUS, bias=K_BIAS, alpha=ALPHA, beta=BETA)
-    x = BatchNorm(name='bn_conv1')(x, training=train_bn)
-    x = KL.MaxPooling2D((3, 3), strides=(2, 2), padding="valid")(x)
-    C1 = x = KL.Dropout(0.25)(x)
+    x = tf.nn.lrn(x, depth_radius=N_DEPTH_RADIUS, bias=K_BIAS, alpha=ALPHA, beta=BETA)
+    C1 = x = KL.MaxPooling2D((3, 3), strides=(2, 2), padding="valid")(x)
     # Stage 2
     x = KL.Conv2D(256, (5, 5), strides=(1, 1), name='conv2', use_bias=True, padding="same")(x)
     x = KL.Activation('relu')(x)
-    # x = tf.nn.lrn(x, depth_radius=5, bias=K_BIAS, alpha=ALPHA, beta=BETA)
-    x = BatchNorm(name='bn_conv2')(x, training=train_bn)
-    x = KL.MaxPooling2D((3, 3), strides=(1, 1), padding="valid")(x)
-    C2 = x = KL.Dropout(0.25)(x)
+    x = tf.nn.lrn(x, depth_radius=5, bias=K_BIAS, alpha=ALPHA, beta=BETA)
+    C2 = x = KL.MaxPooling2D((3, 3), strides=(1, 1), padding="valid")(x)
     # Stage 3
     x = KL.Conv2D(384, (3, 3), strides=(1, 1), padding="same", name="conv3")(x)
-    x = KL.Activation('relu')(x)
-    C3 = BatchNorm(name='bn_conv3_1')(x, training=train_bn)
+    C3 = x = KL.Activation('relu')(x)
     # Stage 4
-    x = KL.Conv2D(384, (3, 3), padding="same")(x)
-    x = KL.Activation('relu')(x)
-    C4 = x = BatchNorm(name='bn_conv3_2')(x, training=train_bn)
+    x = KL.Conv2D(384, (3, 3), strides=(1, 1), padding="same", name="conv4")(x)
+    C4 = x = KL.Activation('relu')(x)
 
+    # Stage 5
     if stage5:
-        x = KL.Conv2D(256, (3, 3), padding="same")(x)
+        x = KL.Conv2D(256, (3, 3), strides=(1, 1), padding="same", name="conv5")(x)
         x = KL.Activation('relu')(x)
-        x = BatchNorm(name='bn_conv3_3')(x, training=train_bn)
-        x = KL.MaxPooling2D((3, 3), strides=(2, 2), padding="valid")(x)
-        C5 = x = KL.Dropout(0.25)(x)
+        C5 = x = KL.MaxPooling2D((3, 3), strides=(1, 1), padding="valid")(x)
     else:
         C5 = None
 
     return [C1, C2, C3, C4, C5]
+
+# NEW
+# def alexnet_graph(input_image, architecture, stage5=False, train_bn=True):
+#     """Build a Alexnet graph.
+#         architecture: Can be alexnet
+#         stage5: Boolean. If False, stage5 of the network is not created
+#         train_bn: Boolean. Train or freeze Batch Norm layers
+#     """
+#     assert architecture in ["alexnet"]
+#
+#     # x = input_image
+#     x = KL.ZeroPadding2D((3, 3))(input_image)
+#     x = KL.Conv2D(96, (11, 11), strides=(4, 4), name='conv1', use_bias=True)(x)
+#     x = KL.Activation('relu')(x)
+#     # x = tf.nn.lrn(x, depth_radius=N_DEPTH_RADIUS, bias=K_BIAS, alpha=ALPHA, beta=BETA)
+#     x = BatchNorm(name='bn_conv1')(x, training=train_bn)
+#     x = KL.MaxPooling2D((3, 3), strides=(2, 2), padding="valid")(x)
+#     C1 = x = KL.Dropout(0.25)(x)
+#     # Stage 2
+#     x = KL.Conv2D(256, (5, 5), strides=(1, 1), name='conv2', use_bias=True, padding="same")(x)
+#     x = KL.Activation('relu')(x)
+#     # x = tf.nn.lrn(x, depth_radius=5, bias=K_BIAS, alpha=ALPHA, beta=BETA)
+#     x = BatchNorm(name='bn_conv2')(x, training=train_bn)
+#     x = KL.MaxPooling2D((3, 3), strides=(1, 1), padding="valid")(x)
+#     C2 = x = KL.Dropout(0.25)(x)
+#     # Stage 3
+#     x = KL.Conv2D(384, (3, 3), strides=(1, 1), padding="same", name="conv3")(x)
+#     x = KL.Activation('relu')(x)
+#     C3 = BatchNorm(name='bn_conv3_1')(x, training=train_bn)
+#     # Stage 4
+#     x = KL.Conv2D(384, (3, 3), padding="same")(x)
+#     x = KL.Activation('relu')(x)
+#     C4 = x = BatchNorm(name='bn_conv3_2')(x, training=train_bn)
+#
+#     if stage5:
+#         x = KL.Conv2D(256, (3, 3), padding="same")(x)
+#         x = KL.Activation('relu')(x)
+#         x = BatchNorm(name='bn_conv3_3')(x, training=train_bn)
+#         x = KL.MaxPooling2D((3, 3), strides=(2, 2), padding="valid")(x)
+#         C5 = x = KL.Dropout(0.25)(x)
+#     else:
+#         C5 = None
+#
+#     return [C1, C2, C3, C4, C5]
 
 
 BATCH_SIZE = 128
@@ -503,7 +505,7 @@ class PyramidROIAlign(KE.Layer):
         # the fact that our coordinates are normalized here.
         # e.g. a 224x224 ROI (in pixels) maps to P4
         image_area = tf.cast(image_shape[0] * image_shape[1], tf.float32)
-        roi_level = log2_graph(tf.sqrt(h * w) / (227.0 / tf.sqrt(image_area)))
+        roi_level = log2_graph(tf.sqrt(h * w) / (224.0 / tf.sqrt(image_area)))
         roi_level = tf.minimum(5, tf.maximum(
             2, 4 + tf.cast(tf.round(roi_level), tf.int32)))
         roi_level = tf.squeeze(roi_level, 2)
@@ -2001,18 +2003,17 @@ class MaskRCNN(object):
         # TODO: add assert to varify feature map sizes match what's in config
         if config.BACKBONE == "alexnet":
             # OLD
-
             # P5 = C5
             # P4 = KL.Add(name="fpn_p4add")([
-            #     KL.ZeroPadding2D(padding=(1, 1))(P5),
-            #     KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (2, 2), name='fpn_c4p4', padding="same")(C4)]
-            # )
+            #     KL.ZeroPadding2D(padding=(3, 3))(P5),
+            #     KL.ZeroPadding2D(padding=(2, 2))(KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (2, 2), name='fpn_c4p4', padding="same")(C4))
+            # ])
             # P3 = KL.Add(name="fpn_p3add")([
             #     KL.UpSampling2D(size=(1, 1), name="fpn_p4upsampled")(P4),
-            #     KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c3p3')(C3)])
+            #     KL.ZeroPadding2D(padding=(2, 2))(KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c3p3')(C3))])
             # P2 = KL.Add(name="fpn_p2add")([
             #     KL.UpSampling2D(size=(1, 1), name="fpn_p3upsampled")(P3),
-            #     KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c2p2')(C2)])
+            #     KL.ZeroPadding2D(padding=(2, 2))(KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c2p2')(C2))])
             # # Attach 3x3 conv to all P layers to get the final feature maps.
             # P2 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="SAME", name="fpn_p2")(P2)
             # P3 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="SAME", name="fpn_p3")(P3)
@@ -2022,19 +2023,18 @@ class MaskRCNN(object):
             # # subsampling from P5 with stride of 2.
             # P6 = KL.MaxPooling2D(pool_size=(1, 1), strides=2, name="fpn_p6")(P5)
 
-            # NEW
-            P5 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c5p5')(C5)
-            #
-            # temp = KL.ZeroPadding2D(padding=(1, 1))(P5)
+            # OLd with the same shapes like resnet
+            P5 = KL.MaxPooling2D(pool_size=(4, 4))(KL.ZeroPadding2D(padding=(3, 3))(C5))
             P4 = KL.Add(name="fpn_p4add")([
-                KL.ZeroPadding2D(padding=(1, 1))(KL.UpSampling2D(size=(2, 2), name="fpn_p5upsampled")(P5)),
-                KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c4p4')(C4)])
+                KL.MaxPooling2D(pool_size=(2, 2))(KL.ZeroPadding2D(padding=(3, 3))(C5)),
+                KL.MaxPooling2D(pool_size=(2, 2))(KL.ZeroPadding2D(padding=(2, 2))(KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (2, 2), name='fpn_c4p4', padding="same")(C4)))
+            ])
             P3 = KL.Add(name="fpn_p3add")([
-                KL.UpSampling2D(size=(1, 1), name="fpn_p4upsampled")(P4),
-                KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c3p3')(C3)])
+                KL.UpSampling2D(size=(2, 2), name="fpn_p4upsampled")(P4),
+                KL.ZeroPadding2D(padding=(2, 2))(KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c3p3')(C3))])
             P2 = KL.Add(name="fpn_p2add")([
-                KL.UpSampling2D(size=(1, 1), name="fpn_p3upsampled")(P3),
-                KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c2p2')(C2)])
+                KL.UpSampling2D(size=(2, 2), name="fpn_p3upsampled")(P3),
+                KL.UpSampling2D(size=(2, 2))(KL.ZeroPadding2D(padding=(2, 2))(KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c2p2')(C2)))])
             # Attach 3x3 conv to all P layers to get the final feature maps.
             P2 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="SAME", name="fpn_p2")(P2)
             P3 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="SAME", name="fpn_p3")(P3)
@@ -2043,12 +2043,33 @@ class MaskRCNN(object):
             # P6 is used for the 5th anchor scale in RPN. Generated by
             # subsampling from P5 with stride of 2.
             P6 = KL.MaxPooling2D(pool_size=(1, 1), strides=2, name="fpn_p6")(P5)
+
+            # NEW
+            # P5 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c5p5')(C5)  # [1, 61, 61, 256]
+            # #
+            # P4 = KL.Add(name="fpn_p4add")([
+            #     KL.ZeroPadding2D(padding=(1, 1))(KL.UpSampling2D(size=(2, 2), name="fpn_p5upsampled")(P5)),  # [1, 124, 124, 256]
+            #     KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c4p4')(C4)])  # [1, 124, 124, 256]
+            # P3 = KL.Add(name="fpn_p3add")([
+            #     KL.UpSampling2D(size=(1, 1), name="fpn_p4upsampled")(P4), # [1, 124, 124, 256]
+            #     KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c3p3')(C3)]) # [1, 124, 124, 256]
+            # P2 = KL.Add(name="fpn_p2add")([
+            #     KL.UpSampling2D(size=(2, 2), name="fpn_p3upsampled")(KL.ZeroPadding2D(padding=(1, 1))(P5)), # [1, 124, 124, 256]
+            #     KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c2p2')(C2)])  # [1, 124, 124, 256]
+            # # Attach 3x3 conv to all P layers to get the final feature maps.
+            # P2 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="SAME", name="fpn_p2")(P2)  # [1, 124, 124, 256]
+            # P3 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="SAME", name="fpn_p3")(P3)  # [1, 124, 124, 256]
+            # P4 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="SAME", name="fpn_p4")(P4)  # [1, 124, 124, 256]
+            # P5 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="SAME", name="fpn_p5")(P5)  # [1, 124, 124, 256]
+            # # P6 is used for the 5th anchor scale in RPN. Generated by
+            # # subsampling from P5 with stride of 2.
+            # P6 = KL.MaxPooling2D(pool_size=(1, 1), strides=2, name="fpn_p6")(P5)  # [1, 62, 62, 256]
         else:
             P5 = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c5p5')(C5)
             #
             P4 = KL.Add(name="fpn_p4add")([
-                KL.UpSampling2D(size=(2, 2), name="fpn_p5upsampled")(P5),
-                KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c4p4')(C4)])
+                KL.UpSampling2D(size=(2, 2), name="fpn_p5upsampled")(P5), #[ 1, 64, 64, 256]
+                KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c4p4')(C4)]) # [1, 64, 64, 256]
             P3 = KL.Add(name="fpn_p3add")([
                 KL.UpSampling2D(size=(2, 2), name="fpn_p4upsampled")(P4),
                 KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c3p3')(C3)])
