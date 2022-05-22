@@ -69,17 +69,11 @@ class GlandConfig(Config):
     DETECTION_MIN_CONFIDENCE = 0.9
 
     BACKBONE = "alexnet"
-    # BACKBONE = "resnet50"
-    # FPN_CLASSIF_FC_LAYERS_SIZE = 1024
 
+    # alexnet
 
-    BACKBONE_STRIDES = [4, 8/3, 8/3, 4, 32/3]
-    # Size of the top-down layers used to build the feature pyramid
-    # TOP_DOWN_PYRAMID_SIZE = 256
-    #
-    # Length of square anchor side in pixels
+    BACKBONE_STRIDES = [32/3, 4, 8/3, 8/3, 4]
     RPN_ANCHOR_SCALES = (96, 256, 384, 384, 256)
-
 
 ############################################################
 #  Dataset
