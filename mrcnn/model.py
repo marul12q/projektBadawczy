@@ -266,7 +266,7 @@ def alexnet_graph(input_image, architecture, stage5=False, train_bn=True):
     # x = tf.nn.lrn(x, depth_radius=N_DEPTH_RADIUS, bias=K_BIAS, alpha=ALPHA, beta=BETA)
     x = BatchNorm(name='bn_conv1')(x, training=train_bn)
     x = KL.MaxPooling2D((3, 3), strides=(2, 2), padding="valid")(x)
-    C1 = KL.Dropout(0.25)
+    C1 = x = KL.Dropout(0.25)(x)
     # Stage 2
     x = KL.Conv2D(256, (5, 5), strides=(1, 1), name='conv2', use_bias=True, padding="same")(x)
     x = KL.Activation('relu')(x)
