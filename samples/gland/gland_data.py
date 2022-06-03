@@ -70,10 +70,9 @@ class GlandConfig(Config):
 
     BACKBONE = "alexnet"
 
-    # alexnet
+    BACKBONE_STRIDES = [4, 8, 16, 32, 64]
+    RPN_ANCHOR_SCALES = (32, 64, 128, 256, 512)
 
-    BACKBONE_STRIDES = [32/3, 4, 8/3, 8/3, 4]
-    RPN_ANCHOR_SCALES = (96, 256, 384, 384, 256)
 
 ############################################################
 #  Dataset
